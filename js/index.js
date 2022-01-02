@@ -7,8 +7,8 @@ const SIZE = {
 	y: window.innerHeight / 2 - IMAGE_HEIGHT / 2,
 	width: IMAGE_WIDTH,
 	height: IMAGE_HEIGHT,
-	rows: 2,
-	cols: 2,
+	rows: 4,
+	cols: 6,
 };
 let cells = [];
 let grid = [];
@@ -46,33 +46,21 @@ function onMouseDown(event) {
 		y: event.y - selected.dy,
 	};
 
-	function moveTo(x, y) {
+	function moveTo({ x, y }) {
 		selected.dx = x - selected.offset.x;
 		selected.dy = y - selected.offset.y;
 	}
 
 	function onMouseMove(event) {
-		moveTo(event.x, event.y);
+		moveTo(event);
 	}
 
 	canvas.addEventListener("mousemove", onMouseMove);
 
-	canvas.onmouseup = function () {
+	canvas.onmouseup = function (event) {
 		canvas.removeEventListener("mousemove", onMouseMove);
 
-		//for (let gridItem of grid) {
-		//	//if (
-		//	//	selected.dx >= gridItem.x &&
-		//	//	selected.dx <= gridItem.x + gridItem.width &&
-		//	//	selected.dy >= gridItem.y &&
-		//	//	selected.dy <= gridItem.y + gridItem.height &&
-		//	//	selected.rowIndex === gridItem.rowIndex &&
-		//	//	selected.columnIndex === gridItem.columnIndex
-		//	//) {
-		//	//	selected.dx = gridItem.x;
-		//	//	selected.dy = gridItem.y;
-		//	//}
-		//}
+		insertCell(selected, event);
 
 		canvas.onmouseup = null;
 		selected = null;
@@ -84,16 +72,33 @@ function getCell(x, y) {
 		let cell = cells[i];
 
 		if (
-			x >= cell.dx &&
-			x <= cell.dx + cell.width &&
-			y >= cell.dy &&
-			y <= cell.dy + cell.height
+			x > cell.dx &&
+			x < cell.dx + cell.width &&
+			y > cell.dy &&
+			y < cell.dy + cell.height
 		) {
 			return cell;
 		}
 	}
 
 	return null;
+}
+
+function insertCell(cell, event) {
+	for (let i = 0; i < grid.length; i++) {
+		if (
+			event.x > grid[i].x &&
+			event.x < grid[i].x + grid[i].width &&
+			event.y > grid[i].y &&
+			event.y < grid[i].y + grid[i].height &&
+			cell.rowIndex === grid[i].rowIndex &&
+			cell.colIndex === grid[i].colIndex
+		) {
+			cell.dx = grid[i].x;
+			cell.dy = grid[i].y;
+			return;
+		}
+	}
 }
 
 function setCells() {
@@ -122,7 +127,7 @@ function setCells() {
 			};
 
 			grid.push(gridItem);
-			cells.push(new Cell({ ...cell }));
+			cells.push(new Cell(cell));
 		}
 	}
 }
@@ -145,7 +150,7 @@ function cropImage() {
 
 function updateCanvas() {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	ctx.globalAlpha = 0.5;
+	ctx.globalAlpha = 0.25;
 	ctx.drawImage(image, SIZE.x, SIZE.y, IMAGE_WIDTH, IMAGE_HEIGHT);
 	ctx.globalAlpha = 1;
 
