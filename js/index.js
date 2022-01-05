@@ -15,7 +15,7 @@ function init() {
 			height: IMAGE_HEIGHT,
 			src: "../img/mountains.jpg",
 		},
-		grid: { rows: 2, cols: 3 },
+		grid: { rows: 6, cols: 9 },
 	};
 	const puzzle = new Puzzle(PUZZLE_OPTIONS);
 
