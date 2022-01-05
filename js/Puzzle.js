@@ -1,67 +1,108 @@
+import Cell from "./Cell.js";
 class Puzzle {
-	constructor({ elem, x, y, width, height, rows, cols }) {
-		this.canvas = elem;
-		this.ctx = this.canvas.getContext("2d");
-		this.x = x;
-		this.y = y;
-		this.width = width;
-		this.height = height;
-		this.rows = rows;
-		this.cols = cols;
-		this.selectedCell = null;
-		this.image = null;
-		this.cells = [];
-		this.onMouseDown = this.onMouseDown.bind(this);
-		this.onMouseMove = this.onMouseMove.bind(this);
-		this.onMouseUp = this.onMouseUp.bind(this);
+	constructor({
+		element,
+		image: { x, y, width: imgWidth, height: imgHeight, src },
+		grid: { rows, cols },
+	}) {
+		this._canvas = element;
+		this._ctx = this._canvas.getContext("2d");
+		this._image = {
+			x,
+			y,
+			width: imgWidth,
+			height: imgHeight,
+			src,
+		};
+		this._grid = {
+			rows,
+			cols,
+			elements: [],
+		};
+		this._cells = [];
+		this._selectedCell = null;
+		this._hoveredCell = null;
 	}
 
 	init() {
-		this.canvas.width = window.innerWidth;
-		this.canvas.height = window.innerHeight;
+		this._canvas.width = window.innerWidth;
+		this._canvas.height = window.innerHeight;
+
 		this.addEventListeners();
 
-		this.image = new Image();
-		this.image.src = "../img/mountains.jpg";
-		this.image.onload = function () {};
+		const image = new Image();
+		image.src = this._image.src;
+		image.onload = () => {
+			this.set();
+			this.updateCanvas(image);
+		};
 	}
 
 	addEventListeners() {
-		this.canvas.addEventListener("mousedown", this.onMouseDown);
-		this.canvas.addEventListener("mousedown", this.onMouseMove);
-		this.canvas.addEventListener("mouseup", this.onMouseUp);
-		this.canvas.addEventListener("dragstart", () => {
+		this._canvas.addEventListener("mousedown", this.onMouseDown.bind(this));
+		this._canvas.addEventListener(
+			"mousemove",
+			this.handleHoverEvent.bind(this),
+		);
+		this._canvas.addEventListener("dragstart", () => {
 			return false;
 		});
 	}
 
 	onMouseDown(event) {
-		this.selectedCell = this.getCell(event);
+		this._selectedCell = this.getCell(event.x, event.y);
 
-		if (this.selectedCell === null) return;
+		if (this._selectedCell === null) return;
+		if (this._selectedCell.isInserted) return;
 
-		this.selectedCell.offset = {
-			x: event.x - this.selectedCell.x,
-			y: event.y - this.selectedCell.y,
+		document.body.style.cursor = "grabbing";
+
+		const index = this._cells.indexOf(this._selectedCell);
+		if (index !== -1) {
+			this._cells.splice(index, 1);
+			this._cells.push(this._selectedCell);
+		}
+
+		this._selectedCell.offset = {
+			x: event.x - this._selectedCell.x,
+			y: event.y - this._selectedCell.y,
 		};
+
+		this._canvas.onmousemove = this.onMouseMove.bind(this);
+		this._canvas.onmouseup = this.onMouseUp.bind(this);
+	}
+
+	handleHoverEvent(event) {
+		this._hoveredCell = this.getCell(event.x, event.y);
+
+		if (this._hoveredCell === null || this._hoveredCell.isInserted) {
+			document.body.style.cursor = "default";
+			return;
+		}
+
+		if (document.body.style.cursor === "grabbing") return;
+
+		document.body.style.cursor = "grab";
 	}
 
 	onMouseMove(event) {
-		this.selectedCell.x = event.x - this.selectedCell.offset.x;
-		this.selectedCell.y = event.y - this.selectedCell.offset.y;
+		this._selectedCell.x = event.x - this._selectedCell.offset.x;
+		this._selectedCell.y = event.y - this._selectedCell.offset.y;
 	}
 
 	onMouseUp(event) {
-		this.canvas.removeEventListener("mousemove", this.onMouseMove);
-		this.canvas.onmouseup = null;
-		this.selectedCell = null;
+		this._canvas.onmousemove = null;
+		this._canvas.onmouseup = null;
+		this.insertCell(this._selectedCell, event.x, event.y);
+		this._selectedCell = null;
+
+		document.body.style.cursor = "grab";
 	}
 
-	getCell(coordinates) {
-		const { x, y } = coordinates;
+	getCell(x, y) {
+		for (let i = this._cells.length - 1; i >= 0; i--) {
+			let cell = this._cells[i];
 
-		for (let i = cells.length - 1; i >= 0; i--) {
-			let cell = cells[i];
 			if (
 				x > cell.x &&
 				x < cell.x + cell.width &&
@@ -71,7 +112,127 @@ class Puzzle {
 				return cell;
 			}
 		}
+
 		return null;
+	}
+
+	insertCell(cell, x, y) {
+		for (let i = 0; i < this._grid.elements.length; i++) {
+			const gridItem = this._grid.elements[i];
+			if (
+				x > gridItem.x &&
+				x < gridItem.x + cell.width &&
+				y > gridItem.y &&
+				y < gridItem.y + cell.height &&
+				cell.rowIndex === gridItem.rowIndex &&
+				cell.colIndex === gridItem.colIndex
+			) {
+				cell.x = gridItem.x;
+				cell.y = gridItem.y;
+				cell.isInserted = true;
+				return;
+			}
+		}
+	}
+
+	updateCanvas(image) {
+		this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+		this._ctx.globalAlpha = 0.25;
+		this._ctx.drawImage(
+			image,
+			this._image.x,
+			this._image.y,
+			this._image.width,
+			this._image.height,
+		);
+		this._ctx.globalAlpha = 1;
+
+		this.draw(image);
+
+		window.requestAnimationFrame(this.updateCanvas.bind(this, image));
+	}
+
+	set() {
+		this._cells = [];
+		this._grid.elements = [];
+
+		for (let rowIndex = 0; rowIndex < this._grid.rows; rowIndex++) {
+			for (let colIndex = 0; colIndex < this._grid.cols; colIndex++) {
+				const coordinates = {
+					x:
+						this._image.x +
+						(this._image.width * colIndex) / this._grid.cols,
+					y:
+						this._image.y +
+						(this._image.height * rowIndex) / this._grid.rows,
+				};
+
+				const gridItem = {
+					rowIndex,
+					colIndex,
+					x: coordinates.x,
+					y: coordinates.y,
+				};
+
+				const cell = {
+					...gridItem,
+					width: this._image.width / this._grid.cols,
+					height: this._image.height / this._grid.rows,
+					cx: (this._image.width * colIndex) / this._grid.cols,
+					cy: (this._image.height * rowIndex) / this._grid.rows,
+				};
+
+				this._grid.elements.push(gridItem);
+				this._cells.push(new Cell(cell));
+			}
+		}
+
+		this.scatterCells();
+	}
+
+	scatterCells() {
+		for (let cell of this._cells) {
+			const coordinates = {
+				x:
+					Math.random() *
+						(window.innerWidth / 2 - cell.width) *
+						0.75 +
+					window.innerWidth / 16,
+				y:
+					Math.random() * (window.innerHeight - cell.height) * 0.75 +
+					window.innerHeight / 8,
+			};
+
+			cell.x = coordinates.x;
+			cell.y = coordinates.y;
+		}
+	}
+
+	draw(image) {
+		this.drawGrid(image);
+		this.drawCells(image);
+	}
+
+	drawGrid(image) {
+		for (let i = 0; i < this._grid.elements.length; i++) {
+			const gridItem = this._grid.elements[i];
+			this._ctx.beginPath();
+			this._ctx.strokeStyle = "#d2e9ee";
+			this._ctx.rect(
+				gridItem.x,
+				gridItem.y,
+				this._cells[0]?.width,
+				this._cells[0]?.height,
+			);
+			this._ctx.stroke();
+		}
+	}
+
+	drawCells(image) {
+		for (let i = 0; i < this._cells.length; i++) {
+			const cell = this._cells[i];
+			cell.draw(this._ctx, image);
+		}
 	}
 }
 
