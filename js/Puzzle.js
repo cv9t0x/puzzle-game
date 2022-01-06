@@ -12,7 +12,7 @@ class Puzzle {
 			y,
 			width: imgWidth,
 			height: imgHeight,
-			src: "../img/mountains.jpg",
+			src: "../assets/img/mountains.jpg",
 		};
 		this._grid = {
 			rows,
