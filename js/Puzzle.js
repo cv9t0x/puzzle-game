@@ -138,9 +138,9 @@ class Puzzle {
 				cell.rowIndex === gridItem.rowIndex &&
 				cell.colIndex === gridItem.colIndex
 			) {
-				//if (!this.isCellFree(x, y, gridItem.x, gridItem.y)) {
-				//	return;
-				//}
+				if (!this.isCellFree(gridItem.x, gridItem.y)) {
+					return;
+				}
 
 				cell.x = gridItem.x;
 				cell.y = gridItem.y;
@@ -156,9 +156,24 @@ class Puzzle {
 		}
 	}
 
-	//isCellFree(cellX, cellY, gridX, gridY) {
-	//	return true;
-	//}
+	isCellFree(gridX, gridY) {
+		for (let i = 0; i < this._cells.length - 1; i++) {
+			const cell = this._cells[i];
+
+			if (
+				((gridX < cell.x && cell.x < gridX + cell.width) ||
+					(gridX < cell.x + cell.width &&
+						cell.x + cell.width < gridX + cell.width)) &&
+				((gridY < cell.y && cell.y < gridY + cell.height) ||
+					(gridY < cell.y + cell.height &&
+						cell.y + cell.height < gridY + cell.height))
+			) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 
 	updateCanvas(image) {
 		this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
