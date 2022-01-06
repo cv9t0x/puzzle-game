@@ -13,11 +13,22 @@ function init() {
 			y: window.innerHeight / 2 - IMAGE_HEIGHT / 2,
 			width: IMAGE_WIDTH,
 			height: IMAGE_HEIGHT,
-			src: "../img/mountains.jpg",
 		},
-		grid: { rows: 6, cols: 9 },
+		grid: { rows: 2, cols: 3 },
 	};
 	const puzzle = new Puzzle(PUZZLE_OPTIONS);
+	const result = document.querySelector(".result");
+	const restartBtn = document.querySelector(".restart-btn");
 
-	puzzle.init();
+	const timerId = setInterval(() => {
+		if (puzzle.isEnded()) {
+			result.classList.add("active");
+			clearInterval(timerId);
+		}
+	}, 100);
+
+	restartBtn.addEventListener("click", () => {
+		result.classList.remove("active");
+		puzzle.restart();
+	});
 }

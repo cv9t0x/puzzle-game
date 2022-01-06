@@ -24,8 +24,12 @@ class Cell {
 			this._width,
 			this._height,
 		);
-		ctx.strokeStyle = "#fff";
-		ctx.rect(this._x, this._y, this._width, this._height);
+
+		if (!this._isInserted) {
+			ctx.strokeStyle = "#fff";
+			ctx.rect(this._x, this._y, this._width, this._height);
+		}
+
 		ctx.stroke();
 	}
 

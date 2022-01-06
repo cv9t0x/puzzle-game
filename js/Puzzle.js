@@ -2,7 +2,7 @@ import Cell from "./Cell.js";
 class Puzzle {
 	constructor({
 		element,
-		image: { x, y, width: imgWidth, height: imgHeight, src },
+		image: { x, y, width: imgWidth, height: imgHeight },
 		grid: { rows, cols },
 	}) {
 		this._canvas = element;
@@ -12,7 +12,7 @@ class Puzzle {
 			y,
 			width: imgWidth,
 			height: imgHeight,
-			src,
+			src: "../img/mountains.jpg",
 		};
 		this._grid = {
 			rows,
@@ -22,6 +22,8 @@ class Puzzle {
 		this._cells = [];
 		this._selectedCell = null;
 		this._hoveredCell = null;
+
+		this.init();
 	}
 
 	init() {
@@ -38,6 +40,14 @@ class Puzzle {
 		};
 	}
 
+	isEnded() {
+		return this._grid.elements.length ? false : true;
+	}
+
+	restart() {
+		this.set();
+	}
+
 	addEventListeners() {
 		this._canvas.addEventListener("mousedown", this.onMouseDown.bind(this));
 		this._canvas.addEventListener(
@@ -47,6 +57,19 @@ class Puzzle {
 		this._canvas.addEventListener("dragstart", () => {
 			return false;
 		});
+	}
+
+	handleHoverEvent(event) {
+		this._hoveredCell = this.getCell(event.x, event.y);
+
+		if (this._hoveredCell === null || this._hoveredCell.isInserted) {
+			document.body.style.cursor = "default";
+			return;
+		}
+
+		if (document.body.style.cursor === "grabbing") return;
+
+		document.body.style.cursor = "grab";
 	}
 
 	onMouseDown(event) {
@@ -70,19 +93,6 @@ class Puzzle {
 
 		this._canvas.onmousemove = this.onMouseMove.bind(this);
 		this._canvas.onmouseup = this.onMouseUp.bind(this);
-	}
-
-	handleHoverEvent(event) {
-		this._hoveredCell = this.getCell(event.x, event.y);
-
-		if (this._hoveredCell === null || this._hoveredCell.isInserted) {
-			document.body.style.cursor = "default";
-			return;
-		}
-
-		if (document.body.style.cursor === "grabbing") return;
-
-		document.body.style.cursor = "grab";
 	}
 
 	onMouseMove(event) {
@@ -119,21 +129,36 @@ class Puzzle {
 	insertCell(cell, x, y) {
 		for (let i = 0; i < this._grid.elements.length; i++) {
 			const gridItem = this._grid.elements[i];
+
 			if (
-				x > gridItem.x &&
-				x < gridItem.x + cell.width &&
-				y > gridItem.y &&
-				y < gridItem.y + cell.height &&
+				x >= gridItem.x &&
+				x <= gridItem.x + cell.width &&
+				y >= gridItem.y &&
+				y <= gridItem.y + cell.height &&
 				cell.rowIndex === gridItem.rowIndex &&
 				cell.colIndex === gridItem.colIndex
 			) {
+				//if (!this.isCellFree(x, y, gridItem.x, gridItem.y)) {
+				//	return;
+				//}
+
 				cell.x = gridItem.x;
 				cell.y = gridItem.y;
 				cell.isInserted = true;
+
+				const index = this._grid.elements.indexOf(gridItem);
+				if (index !== -1) {
+					this._grid.elements.splice(index, 1);
+				}
+
 				return;
 			}
 		}
 	}
+
+	//isCellFree(cellX, cellY, gridX, gridY) {
+	//	return true;
+	//}
 
 	updateCanvas(image) {
 		this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
