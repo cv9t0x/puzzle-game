@@ -14,7 +14,7 @@ function init() {
 			width: IMAGE_WIDTH,
 			height: IMAGE_HEIGHT,
 		},
-		grid: { rows: 2, cols: 3 },
+		grid: { rows: 6, cols: 9 },
 	};
 	const puzzle = new Puzzle(PUZZLE_OPTIONS);
 	const result = document.querySelector(".result");

@@ -247,20 +247,35 @@ class Puzzle {
 	}
 
 	scatterCells() {
-		for (let cell of this._cells) {
-			const coordinates = {
+		const positions = [];
+		let i = 0;
+
+		while (positions.length < this._cells.length) {
+			const position = {
 				x:
 					Math.random() *
-						(window.innerWidth / 2 - cell.width) *
+						(window.innerWidth / 2 - this._cells[i].width) *
 						0.75 +
 					window.innerWidth / 16,
 				y:
-					Math.random() * (window.innerHeight - cell.height) * 0.75 +
+					Math.random() *
+						(window.innerHeight - this._cells[i].height) *
+						0.75 +
 					window.innerHeight / 8,
 			};
 
-			cell.x = coordinates.x;
-			cell.y = coordinates.y;
+			if (
+				!positions.some(
+					(p) =>
+						Math.abs(p.x - position.x) < this._cells[i].width &&
+						Math.abs(p.y - position.y) < this._cells[i].height,
+				)
+			) {
+				this._cells[i].x = position.x;
+				this._cells[i].y = position.y;
+				positions.push(position);
+				i++;
+			}
 		}
 	}
 
