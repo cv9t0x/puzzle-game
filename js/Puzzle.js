@@ -96,8 +96,24 @@ class Puzzle {
 	}
 
 	onMouseMove(event) {
-		this._selectedCell.x = event.x - this._selectedCell.offset.x;
-		this._selectedCell.y = event.y - this._selectedCell.offset.y;
+		let x = event.x - this._selectedCell.offset.x;
+		let y = event.y - this._selectedCell.offset.y;
+
+		if (x < 0) {
+			x = 0;
+		}
+		if (y < 0) {
+			y = 0;
+		}
+		if (x > window.innerWidth - this._selectedCell.width) {
+			x = window.innerWidth - this._selectedCell.width;
+		}
+		if (y > window.innerHeight - this._selectedCell.height) {
+			y = window.innerHeight - this._selectedCell.height;
+		}
+
+		this._selectedCell.x = x;
+		this._selectedCell.y = y;
 	}
 
 	onMouseUp(event) {
