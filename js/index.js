@@ -19,13 +19,15 @@ function init() {
 	const puzzle = new Puzzle(PUZZLE_OPTIONS);
 	const result = document.querySelector(".result");
 	const restartBtn = document.querySelector(".restart-btn");
-	const gameState = setInterval(() => {
-		if (puzzle.isEnded()) {
-			result.classList.add("active");
-		} else {
-			result.classList.remove("active");
-		}
-	}, 5);
+	setTimeout(() => {
+		let timerId = setInterval(() => {
+			if (puzzle.isEnded()) {
+				result.classList.add("active");
+			} else {
+				result.classList.remove("active");
+			}
+		}, 5);
+	}, 50);
 
 	restartBtn.addEventListener("click", () => {
 		puzzle.restart();

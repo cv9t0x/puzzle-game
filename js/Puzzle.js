@@ -50,6 +50,7 @@ class Puzzle {
 
 	addEventListeners() {
 		this._canvas.addEventListener("mousedown", this.onMouseDown.bind(this));
+		this._canvas.addEventListener("mouseout", this.onMouseOut.bind(this));
 		this._canvas.addEventListener(
 			"mousemove",
 			this.handleHoverEvent.bind(this),
@@ -72,6 +73,10 @@ class Puzzle {
 		document.body.style.cursor = "grab";
 	}
 
+	onMouseOut() {
+		this._canvas.onmousemove = null;
+	}
+
 	onMouseDown(event) {
 		this._selectedCell = this.getCell(event.x, event.y);
 
@@ -90,6 +95,10 @@ class Puzzle {
 			x: event.x - this._selectedCell.x,
 			y: event.y - this._selectedCell.y,
 		};
+		//this._selectedCell.start = {
+		//	x: this._selectedCell.x,
+		//	y: this._selectedCell.y,
+		//};
 
 		this._canvas.onmousemove = this.onMouseMove.bind(this);
 		this._canvas.onmouseup = this.onMouseUp.bind(this);
@@ -119,7 +128,10 @@ class Puzzle {
 	onMouseUp(event) {
 		this._canvas.onmousemove = null;
 		this._canvas.onmouseup = null;
-		this.insertCell(this._selectedCell, event.x, event.y);
+		this.insertCell(event.x, event.y);
+
+		delete this._selectedCell.offset;
+		//delete this._selectedCell.start;
 		this._selectedCell = null;
 
 		document.body.style.cursor = "grab";
@@ -142,25 +154,25 @@ class Puzzle {
 		return null;
 	}
 
-	insertCell(cell, x, y) {
+	insertCell(x, y) {
 		for (let i = 0; i < this._grid.elements.length; i++) {
 			const gridItem = this._grid.elements[i];
 
 			if (
 				x >= gridItem.x &&
-				x <= gridItem.x + cell.width &&
+				x <= gridItem.x + this._selectedCell.width &&
 				y >= gridItem.y &&
-				y <= gridItem.y + cell.height &&
-				cell.rowIndex === gridItem.rowIndex &&
-				cell.colIndex === gridItem.colIndex
+				y <= gridItem.y + this._selectedCell.height &&
+				this._selectedCell.rowIndex === gridItem.rowIndex &&
+				this._selectedCell.colIndex === gridItem.colIndex
 			) {
 				if (!this.isCellFree(gridItem.x, gridItem.y)) {
 					return;
 				}
 
-				cell.x = gridItem.x;
-				cell.y = gridItem.y;
-				cell.isInserted = true;
+				this._selectedCell.x = gridItem.x;
+				this._selectedCell.y = gridItem.y;
+				this._selectedCell.isInserted = true;
 
 				const index = this._grid.elements.indexOf(gridItem);
 				if (index !== -1) {
@@ -170,6 +182,9 @@ class Puzzle {
 				return;
 			}
 		}
+
+		//this._selectedCell.x = this._selectedCell.start.x;
+		//this._selectedCell.y = this._selectedCell.start.y;
 	}
 
 	isCellFree(gridX, gridY) {
